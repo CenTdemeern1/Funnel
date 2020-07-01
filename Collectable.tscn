@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://funnelballcollectablespatialmaterial.tres" type="Material" id=1]
+[ext_resource path="res://Collectable.gd" type="Script" id=2]
+[ext_resource path="res://funnelballcollectable.png" type="Texture" id=3]
+
+[sub_resource type="QuadMesh" id=1]
+material = ExtResource( 1 )
+
+[sub_resource type="SphereShape" id=2]
+radius = 0.5
+
+[node name="Collectable" type="Spatial"]
+script = ExtResource( 2 )
+
+[node name="Collectable" type="MeshInstance" parent="."]
+mesh = SubResource( 1 )
+material/0 = null
+
+[node name="Area" type="Area" parent="Collectable" groups=[
+"Collectable",
+]]
+
+[node name="CollisionShape" type="CollisionShape" parent="Collectable/Area"]
+shape = SubResource( 2 )
+
+[node name="Sprite" type="Sprite" parent="."]
+visible = false
+position = Vector2( 3.8147e-06, 0 )
+scale = Vector2( 0.118519, 0.118519 )
+texture = ExtResource( 3 )
+
+[node name="Tween" type="Tween" parent="."]
+[connection signal="body_entered" from="Collectable/Area" to="." method="_on_Area_body_entered"]
+[connection signal="tween_all_completed" from="Tween" to="." method="_on_Tween_tween_all_completed"]

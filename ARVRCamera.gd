@@ -1,6 +1,6 @@
 extends ARVRCamera
 
-
+var upVector
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
@@ -14,6 +14,7 @@ extends ARVRCamera
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	var normalCamera = get_parent().get_parent()
+	var upVector = normalCamera.upVector
 	#self.fov = normalCamera.fov
 	get_parent().translation=Vector3(0,0,(normalCamera.fov-70)/(normalCamera.maxFOV-70)*9)
 	self.current=get_viewport().arvr

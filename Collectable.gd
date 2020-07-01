@@ -11,12 +11,15 @@ export var invisible = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	set_process(true)
 	$Collectable.visible=!invisible
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-#func _process(delta):
-#	pass
+func _process(delta):
+	if Global.MANUAL_BILLBOARD:
+		var dir = Global.current_camera.rotation#self.translation.direction_to(Global.current_camera.translation)
+		self.rotation=dir#look_at(self.translation-dir,Global.current_camera.upVector)
 
 
 func _on_Area_body_entered(body):

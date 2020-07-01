@@ -5,6 +5,8 @@ var MULTIPLAYER_STARTED = false
 var players = {}
 var player_info = {}
 var SINGLEPLAYER = true
+var MANUAL_BILLBOARD = true
+onready var current_camera = get_viewport().get_camera()
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
@@ -12,11 +14,12 @@ var SINGLEPLAYER = true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass
+	MANUAL_BILLBOARD = VisualServer.get_video_adapter_vendor() == "ATI Technologies Inc."
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	current_camera = get_viewport().get_camera()
 	if Input.is_action_just_pressed("vr"):
 		var arvr_interface = ARVRServer.find_interface("Native mobile")
 		if get_viewport().arvr:

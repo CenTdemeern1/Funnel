@@ -4,5 +4,6 @@
 
 [resource]
 flags_transparent = true
+params_cull_mode = 2
 params_billboard_mode = 1
 albedo_texture = ExtResource( 1 )

@@ -4,6 +4,9 @@ var position_on_screen
 var collected_by_player
 var collected = false
 export var invisible = false
+export var bounce = true
+var bounceTime = 0
+export var bouncePointIndex = 0
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
@@ -13,10 +16,27 @@ export var invisible = false
 func _ready():
 	set_process(true)
 	$Collectable.visible=!invisible
+	var point
+#	if bouncePointIndex == 0:
+#
+#	else:
+	for bp in get_tree().get_nodes_in_group('bouncePoint'):
+		if bp.pointIndex==bouncePointIndex:
+			point=bp.translation
+			break
+	if not point:
+		point = Vector3.ZERO
+	bounceTime=-self.translation.distance_to(point)/8
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if bounce:
+		bounceTime+=delta*2
+		bounceTime=fmod(bounceTime,1)
+		var t = Vector3(0,abs(sin(bounceTime*PI))/2,0)
+		$Collectable.translation=t
+		$Collectable/Area.translation=-t
 	if Global.MANUAL_BILLBOARD:
 		var dir = Global.current_camera.rotation#self.translation.direction_to(Global.current_camera.translation)
 		self.rotation=dir#look_at(self.translation-dir,Global.current_camera.upVector)

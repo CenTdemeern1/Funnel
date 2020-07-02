@@ -48,6 +48,7 @@ func update_player(playerdata):
 		MP_NEXT_STATE = playerdata
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
-#	pass
+#	#debug thing for fun
+#	blueCollectablesCollected+=1
 
 

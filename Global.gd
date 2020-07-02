@@ -5,7 +5,7 @@ var MULTIPLAYER_STARTED = false
 var players = {}
 var player_info = {}
 var SINGLEPLAYER = true
-var MANUAL_BILLBOARD = true
+var MANUAL_BILLBOARD = false
 onready var current_camera = get_viewport().get_camera()
 # Declare member variables here. Examples:
 # var a = 2

@@ -8,6 +8,7 @@ const maxDistanceToPlayer = 4
 var upVector = Vector3(0,1,0)
 const moveAwayToNotClipPlayer = 2
 const maxFOV = 139#179
+onready var INITIAL_POSITION = self.transform
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
@@ -20,6 +21,8 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if Input.is_action_just_pressed("soft_restart"):
+		self.transform=INITIAL_POSITION
 	self.current=!get_viewport().arvr
 	var playerObject = get_node(player)
 	
@@ -33,6 +36,10 @@ func _process(delta):
 		var distanceToMove = self.translation.distance_to(playerObject.translation)-maxDistanceToPlayer
 		self.translation+=self.translation.direction_to(playerObject.translation+Vector3(0,1,0))*distanceToMove
 	var lookAt = playerObject.translation
+	#print(self.translation.direction_to(lookAt).normalized())
+	var normDir = lookAt.direction_to(self.translation).normalized()
+	if normDir==upVector or normDir.length()==0:
+		self.translation+=Vector3(0,2,-3)
 	self.look_at(lookAt,upVector)#playerObject.translation
 	self.rotation+=Vector3((rotCamUp-rotCamDown)*.5,(rotCamLeft-rotCamRight)*.5,0)
 	if self.translation.distance_to(playerObject.translation)<=moveAwayToNotClipPlayer:

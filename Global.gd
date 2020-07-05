@@ -1,5 +1,7 @@
 extends Node
 
+var playerType
+var cameraType
 var peer
 var MULTIPLAYER_STARTED = false
 var players = {}
@@ -15,6 +17,8 @@ onready var current_camera = get_viewport().get_camera()
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	MANUAL_BILLBOARD = VisualServer.get_video_adapter_vendor() == "ATI Technologies Inc."
+	playerType = preload("res://Player.tscn")
+	cameraType = preload("res://Camera.tscn")
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -110,3 +114,39 @@ func network_peer_disconnected(id):
 remote func update_player_global(playerdata):
 	var id = get_tree().get_rpc_sender_id()
 	get_tree().current_scene.get_node("MPPlayers/"+str(id)).update_player(playerdata)
+
+func set_scene(scenePath=null,sceneObject=null):
+	if scenePath:
+		sceneObject = load(scenePath)
+	var scene = sceneObject#.instance()
+	print('Scene load OK: ',get_tree().change_scene_to(scene)==OK)
+
+func set_scene_step_two():
+	var setScene = get_tree().current_scene#scene#
+	print(setScene.mapType)
+	if setScene.mapType==0:
+		return
+	if setScene.mapType==1:
+		var MPPlayers = setScene.get_node('MPPlayers')
+		var MPCameras = setScene.get_node('MPCameras')
+		var playerNode = playerType.instance()
+		var id = get_tree().get_network_unique_id()
+		playerNode.set_name(str(id))
+		playerNode.set_network_master(id)
+		MPPlayers.add_child(playerNode)
+		var MPPlayerNode = MPPlayers.get_node(str(id))
+		var playerStart = get_tree().get_nodes_in_group('PlayerStart')
+		if len(playerStart)!=0:
+			MPPlayerNode.translation=playerStart[0].translation
+			MPPlayerNode.INITIAL_POSITION=MPPlayerNode.transform
+		MPPlayerNode.blueCollectablesCollected = setScene.startWithBlueCollectibles
+		var cameraNode = cameraType.instance()
+		cameraNode.set_name(str(id))
+		cameraNode.set_network_master(id)
+		cameraNode.player = MPPlayerNode.get_path()
+		MPCameras.add_child(cameraNode)
+		var MPCameraNode = MPCameras.get_node(str(id))
+		playerNode.camera = MPCameraNode.get_path()
+		if len(playerStart)!=0:
+			MPCameraNode.translation=playerStart[0].translation+Vector3(0,2,-3)
+		setScene.get_node('UI').player=MPPlayerNode.get_path()

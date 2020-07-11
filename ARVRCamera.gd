@@ -17,4 +17,8 @@ func _process(delta):
 	var upVector = normalCamera.upVector
 	#self.fov = normalCamera.fov
 	get_parent().translation=Vector3(0,0,(normalCamera.fov-70)/(normalCamera.maxFOV-70)*9)
-	self.current=get_viewport().arvr
+	#self.current=get_viewport().arvr
+	if Global.SINGLEPLAYER:
+		self.current=get_viewport().arvr
+	else:
+		self.current=(get_viewport().arvr) and (normalCamera.playerObject.get_name()==str(get_tree().get_network_unique_id()))#normalCamera.playerObject.MAIN_PLAYER#

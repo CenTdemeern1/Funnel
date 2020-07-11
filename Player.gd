@@ -11,6 +11,7 @@ var MP_NEXT_STATE
 onready var INITIAL_POSITION = self.transform
 var BOUNCE = false
 var BOUNCE_POINT
+var BOOST_PAD = false
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
@@ -27,10 +28,13 @@ func _integrate_forces(state):
 		state.set_transform(INITIAL_POSITION)
 		self.transform=INITIAL_POSITION
 		BOUNCE=false
+	if !MAIN_PLAYER:
+		for player in get_tree().get_nodes_in_group('Player'):
+			self.add_collision_exception_with(player)
 	if !MAIN_PLAYER and MP_NEXT_STATE:
-		state.set_angular_velocity(MP_NEXT_STATE['state'].get_angular_velocity())
+		state.set_angular_velocity(MP_NEXT_STATE['angvel'])
 		self.translation = MP_NEXT_STATE['position']
-	if !camera:
+	if !camera or !MAIN_PLAYER:
 		return
 	if BOUNCE:
 		BOUNCE=false
@@ -45,24 +49,47 @@ func _integrate_forces(state):
 	var left = Input.get_action_strength("left")*cameraDirection[2]
 	var right = Input.get_action_strength("right")*-cameraDirection[2]
 	var ang = forward+back+left+right#Vector3(forward-back,0,right-left)*0.5
+	var EFFECTIVE_TERMINAL_VELOCITY = 0
+	var effective_ang = 0
+	if BOOST_PAD:
+		effective_ang = ang*2
+		EFFECTIVE_TERMINAL_VELOCITY=TERMINAL_VELOCITY*2
+	else:
+		effective_ang = ang
+		EFFECTIVE_TERMINAL_VELOCITY=TERMINAL_VELOCITY
 	var angvel = state.get_angular_velocity()
-	var tangvel = (angvel+ang)
-	if tangvel.length()>=TERMINAL_VELOCITY or Input.is_action_pressed('dbgSpeed'):
-		tangvel = tangvel.normalized()*TERMINAL_VELOCITY
+	var tangvel = (angvel+effective_ang)
+	if tangvel.length()>=EFFECTIVE_TERMINAL_VELOCITY or Input.is_action_pressed('dbgSpeed'):
+		tangvel = tangvel.normalized()*EFFECTIVE_TERMINAL_VELOCITY
 	var brake = 1-Input.get_action_strength("brake")*0.5
-	state.set_angular_velocity(tangvel*brake)
+	var angularvel = tangvel*brake
+	state.set_angular_velocity(angularvel)
 	#print('force ',tangvel)
 	if !Global.SINGLEPLAYER:
 		if MAIN_PLAYER:
-			rpc_unreliable('update_player_global',{'state':state,'position':self.translation})
+			#print(self.name,' main')
+			rpc_unreliable('update_player',{'state':state,'position':self.translation,'angvel':angularvel})#_global
 
-func update_player(playerdata):
+remote func update_player(playerdata):
 	if !MAIN_PLAYER: #sanity check
 		MP_NEXT_STATE = playerdata
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	$CanvasLayer/Label.text=self.name
+	var cam = get_viewport().get_camera()
+	var pos = cam.unproject_position(self.translation+Vector3(0,1.5,0))
+	pos-=$CanvasLayer/Label.rect_size*$CanvasLayer/Label.rect_scale*0.5
+	$CanvasLayer/Label.rect_position=pos
 	#debug thing for fun
 	if Input.is_action_pressed("debugCollect"):
 		blueCollectablesCollected+=10000
 
 
+
+
+func _on_nametag_camera_entered(camera):
+	$CanvasLayer/Label.visible=true
+
+
+func _on_nametag_camera_exited(camera):
+	$CanvasLayer/Label.visible=false

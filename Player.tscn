@@ -33,3 +33,16 @@ visible = false
 
 [node name="ball3" parent="." instance=ExtResource( 4 )]
 visible = false
+
+[node name="VisibilityNotifier" type="VisibilityNotifier" parent="."]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+margin_right = 40.0
+margin_bottom = 14.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="camera_entered" from="VisibilityNotifier" to="." method="_on_nametag_camera_entered"]
+[connection signal="camera_exited" from="VisibilityNotifier" to="." method="_on_nametag_camera_exited"]

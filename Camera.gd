@@ -23,8 +23,14 @@ func _ready():
 func _process(delta):
 	if Input.is_action_just_pressed("soft_restart"):
 		self.transform=INITIAL_POSITION
-	self.current=!get_viewport().arvr
 	var playerObject = get_node(player)
+	if Global.SINGLEPLAYER:
+		self.current=!get_viewport().arvr
+	else:
+		self.current=(!get_viewport().arvr) and (playerObject.get_name()==str(get_tree().get_network_unique_id()))#playerObject.MAIN_PLAYER#
+#		if self.current:
+#			print(playerObject.get_name())
+#	print(playerObject.get_name(),self.current,self.name,playerObject.get_name()==str(get_tree().get_network_unique_id()))
 	
 	var rotCamLeft = Input.get_action_strength("rotateCameraLeft")
 	var rotCamRight = Input.get_action_strength("rotateCameraRight")

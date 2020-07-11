@@ -35,8 +35,9 @@ func _process(delta):
 				get_viewport().arvr = true
 	if Input.is_action_just_pressed("restart"):
 		Input.action_release("restart")
-		get_tree().call_group("MainScene","free")
-		get_node("/root").add_child(load("MainScene.tscn").instance())
+		get_tree().reload_current_scene()
+#		get_tree().call_group("MainScene","free")
+#		get_node("/root").add_child(load("MainScene.tscn").instance())
 	if Input.is_action_just_pressed("dbgMultiplayerServer"):
 		start_multiplayer_server()
 	if Input.is_action_just_pressed("dbgMultiplayerClient"):
@@ -52,6 +53,8 @@ func start_multiplayer_server(port=41917,max_players=8):
 		print('Error starting server: ',err)
 	else:
 		print('Server Started! Running on port ',port,' with a maximum amount of ',max_players,' players.')
+		Global.SINGLEPLAYER=false
+	post_start_multiplayer()
 
 func start_multiplayer_client(server_ip,port=41917):
 	if not MULTIPLAYER_STARTED:
@@ -63,6 +66,7 @@ func start_multiplayer_client(server_ip,port=41917):
 		print('Error starting client: ',err)
 	else:
 		print('Client Started! Targeting IP ',server_ip,' on port ',port,'.')
+	post_start_multiplayer()
 
 func start_multiplayer():
 	get_tree().connect("network_peer_connected", self, "network_peer_connected")
@@ -71,6 +75,14 @@ func start_multiplayer():
 	get_tree().connect("connection_failed", self, "_connected_fail")
 	get_tree().connect("server_disconnected", self, "_server_disconnected")
 	MULTIPLAYER_STARTED = true
+
+func post_start_multiplayer():
+	get_tree().reload_current_scene()
+#	var me = get_tree().get_network_unique_id()
+#	for player in get_tree().get_nodes_in_group('Player'):
+#		if player.MAIN_PLAYER:
+#			player.set_name(str(me))
+#			player.set_network_master(me)
 
 func _connected_ok():
 	print('Connection to server successful!')
@@ -102,11 +114,12 @@ func network_peer_connected(id):
 remote func spawn_player(info):
 	var id = get_tree().get_rpc_sender_id()
 	players[id] = info
-	var new_player = preload("res://Player.tscn").instance()
-	new_player.MAIN_PLAYER = false
-	new_player.set_name(str(id))
-	new_player.set_network_master(id)
-	get_tree().current_scene.get_node('MPPlayers').add_child(new_player,true)
+	#var new_player = preload("res://Player.tscn").instance()
+	#new_player.MAIN_PLAYER = false
+	#new_player.set_name(str(id))
+	#new_player.set_network_master(id)
+	#get_tree().current_scene.get_node('MPPlayers').add_child(new_player,true)
+	set_scene_step_two(id)
 
 func network_peer_disconnected(id):
 	print('ID ',id,' disconnected!')
@@ -121,7 +134,15 @@ func set_scene(scenePath=null,sceneObject=null):
 	var scene = sceneObject#.instance()
 	print('Scene load OK: ',get_tree().change_scene_to(scene)==OK)
 
-func set_scene_step_two():
+func set_scene_step_two(rID=null):
+	var mPlay=true
+	if rID==null:
+		rID=get_tree().get_network_unique_id()
+		mPlay=true
+		print('Add main player ',rID,'. Hey, that\'s me!')
+	else:
+		mPlay=false
+		print('Add non-main player ',rID,', hello there!')
 	var setScene = get_tree().current_scene#scene#
 	print(setScene.mapType)
 	if setScene.mapType==0:
@@ -130,8 +151,9 @@ func set_scene_step_two():
 		var MPPlayers = setScene.get_node('MPPlayers')
 		var MPCameras = setScene.get_node('MPCameras')
 		var playerNode = playerType.instance()
-		var id = get_tree().get_network_unique_id()
+		var id = rID#get_tree().get_network_unique_id()
 		playerNode.set_name(str(id))
+		playerNode.MAIN_PLAYER = mPlay
 		playerNode.set_network_master(id)
 		MPPlayers.add_child(playerNode)
 		var MPPlayerNode = MPPlayers.get_node(str(id))
@@ -149,4 +171,5 @@ func set_scene_step_two():
 		playerNode.camera = MPCameraNode.get_path()
 		if len(playerStart)!=0:
 			MPCameraNode.translation=playerStart[0].translation+Vector3(0,2,-3)
+			MPCameraNode.previousPosition = MPCameraNode.translation
 		setScene.get_node('UI').player=MPPlayerNode.get_path()
